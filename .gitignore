@@ -1,0 +1,9 @@
+# This file tells Git to ignore certain files.
+# We only commit to Git the "source code" of the application.
+
+# Ignore the SQLite database.
+# It should not be committed to Git, because it is not source code.
+db.sqlite3
+
+# Likewise, running Python creates __pycache__ directories that are not source code either.
+__pycache__

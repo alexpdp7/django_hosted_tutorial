@@ -1,0 +1,27 @@
+# We ask Render to create a PostgreSQL database for us
+databases:
+  - name: mysitedb
+    plan: free
+    databaseName: mysite
+    user: mysite
+
+# And this is the application
+services:
+  - type: web
+    plan: free
+    name: mysite
+    runtime: python
+    buildCommand: "./build"
+    # This starts the application using a production gunicorn/uvicorn web server.
+    startCommand: "python -m gunicorn example.asgi:application -k uvicorn.workers.UvicornWorker"
+    envVars:
+      # We ask Render to give us the details to connect to the database via this variable, that we later use in settings.py.
+      - key: DATABASE_URL
+        fromDatabase:
+          name: mysitedb
+          property: connectionString
+      # And we also ask Render to create a secret key required for Django sessions.
+      - key: SECRET_KEY
+        generateValue: true
+      - key: WEB_CONCURRENCY
+        value: 4

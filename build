@@ -1,0 +1,38 @@
+#!/usr/bin/env python3
+
+"""
+This program runs when the application is deployed to Render.
+
+It takes care to deploy our application.
+
+This is not designed for the development environment.
+"""
+
+import os
+import shlex
+import subprocess
+import venv
+
+
+# Just a friendly wrapper for subprocess.run, to ensure that we do not forget to use check=True.
+# We also print the commands we run to make debugging a bit nicer.
+def run(*args, env=None):
+    print(shlex.join(args))
+    subprocess.run(args, check=True, env=env)
+
+
+# Because we are using Django, our application can be installed with pip (and Poetry itself is not required).
+# The application declares "extra" dependencies which are only required to use PostgreSQL and for production deployments.
+run("pip", "install", ".[pgsql,production]")
+# This is required for WhiteNoise to work.
+run("python", "manage.py", "collectstatic", "--no-input")
+# We run the Django database migrations to prepare the database.
+run("python", "manage.py", "migrate")
+
+# If the ADMIN_PASSWORD variable is set, then we create a superuser for the application.
+admin_password = os.environ.get("ADMIN_PASSWORD")
+
+if admin_password:
+    env = dict(os.environ)
+    env["DJANGO_SUPERUSER_PASSWORD"] = admin_password
+    run("python", "manage.py", "createsuperuser", "--no-input", "--username", "admin", "--email", os.environ.get("ADMIN_EMAIL", "admin@example.com"), env=env)
