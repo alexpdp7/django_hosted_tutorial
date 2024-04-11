@@ -54,8 +54,29 @@ To create a user:
 6. The deployment can take a few minutes, then the logs display "your service is live".
 7. Visit the admin site again and login with the `admin` user and the password that you used in a previous step.
 
-> [!NOTE]
-> TODO: show how to make changes to the application and deploy updates.
+Once everything is configured, if you push changes to the repository, Render deploys the new changes automatically.
 
-> [!NOTE]
-> TODO: demonstrate Dependabot.
+# Running the application locally
+
+You can also run the application locally for development, because the application settings detect whether you are running the application locally or on Render, and change the configuration accordingly.
+When running locally, debug mode is on, and the application uses an SQLite database instead of PostgreSQL to reduce the amount of dependencies to configure on your development environment.
+Using different database types can cause issues with more complex applications.
+
+# How this works
+
+The following files deviate from a blank Django application so that the application can be deployed to Render.
+
+* [`example/settings.py`](example/settings.py): A Django settings module with customizations for development and the Render deployment.
+* [`build`](build): A Python script that Render runs to build the application.
+  The script performs the following tasks:
+  * Installs the application to the Python installation that Render runs.
+  * Runs `manage.py collectstatic` to serve static files in production mode.
+  * Runs Django database migrations.
+  * If the `ADMIN_PASSWORD` variable is set, creates a super user.
+* [`poetry.lock`](poetry.lock) and [`pyproject.toml`](pyproject.toml) use Poetry to package the application.
+  These files control the dependencies that the application uses, and their versions.
+  The Poetry "extras" feature is used to declare dependencies that are only required for production, but not for development.
+* [`render.yaml`](render.yaml): contains the blueprint definition for Render.
+  Render follows the blueprint to create the application and the database.
+
+Refer to the comments on the files for further information.
